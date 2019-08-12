@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="service.auth.AuthMapper">
+
+	<select id="selectFirstUrl" parameterType="java.lang.Integer" resultType="String">
+		select
+			case 
+				when menuLarge.page_url is NULL
+		        then 
+					(
+						select
+							page_url
+						from
+							tb_group_menu
+						where
+							menu_seq = 
+							(
+								select 
+									SUBSTRING_INDEX(menu_medium, ',', 1) as menuMedium
+								from
+									tb_group_user
+								where
+									group_seq=#{groupSeq}
+							)
+					)         
+		        else menuLarge.page_url
+			end page_url
+		from
+			(
+				select
+					page_url
+				from
+					tb_group_menu
+				where
+					menu_seq = 
+					(
+						select 
+							SUBSTRING_INDEX(menu_large, ',', 1) as menuLarge
+						from
+							tb_group_user
+						where
+							group_seq=#{groupSeq}
+					)
+			) menuLarge
+		;
+	</select>
+
+</mapper>

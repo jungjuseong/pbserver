@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+  xmlns:beans="http://www.springframework.org/schema/beans"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:context="http://www.springframework.org/schema/context"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+           http://www.springframework.org/schema/context 
+		   http://www.springframework.org/schema/context/spring-context.xsd
+           http://www.springframework.org/schema/security
+           http://www.springframework.org/schema/security/spring-security-3.2.xsd">
+	
+	<beans:bean id="webExpressionHandler" class="org.springframework.security.web.access.expression.DefaultWebSecurityExpressionHandler">
+<!-- 	  <beans:property name="permissionEvaluator" ref="permissionEvaluator"/> -->
+	  <beans:property name="roleHierarchy" ref="roleHierarchy"/>
+	</beans:bean>
+	
+	<debug/>
+	<context:component-scan base-package="com.clbee.pbcms" />
+    <http pattern="/css/**" security="none"/>
+    <http pattern="/js/**" security="none"/>
+    <http pattern="/resources/**" security="none"/>
+    <http pattern="/images/**" security="none"/>
+    <http pattern="/font/**" security="none"/>
+    <http pattern="/_upload/_temp/images/**" security="none"/>
+
+
+
+    <!-- intercept-url의 순서에  따라서 의미가 또 바뀝니다-->
+    <http use-expressions="true" access-decision-manager-ref="accessDecisionManager" >
+	    <!-- 막은 이유: 난수로밖에 막을수 없응 (파일이름) -->
+		<!-- <intercept-url pattern="/_upload/data/**" access="denyAll"/> -->
+		<intercept-url pattern="/favicon.ico" access="permitAll"/>
+		<intercept-url pattern="/index.html" access="permitAll"/>
+		<intercept-url pattern="/send_id_mail.html" access="permitAll"/>
+		<intercept-url pattern="/userIdValidation.html" access="permitAll"/>
+		<intercept-url pattern="/emailValidation.html" access="permitAll"/>
+		<intercept-url pattern="/userStatusValid.html" access="permitAll"/>
+		<intercept-url pattern="/member/**" access="permitAll"/>
+		<intercept-url pattern="/findid.html" access="permitAll"/>
+		<intercept-url pattern="/findpwd.html" access="permitAll"/>
+		<intercept-url pattern="/loginVerify.html" access="permitAll"/>
+		<intercept-url pattern="/inAppJsonSerializer.html" access="permitAll"/>
+		<intercept-url pattern="/printAnswer.html" access="permitAll"/>
+		<intercept-url pattern="/viewJsonAnswer.html" access="permitAll"/>
+	<!-- 20180518 : lsy - 권한 체계 변경	
+		<intercept-url pattern="/contents/**" access="hasAnyRole('ROLE_COMPANY_MIDDLEADMIN','ROLE_COMPANY_CREATOR','ROLE_ADMIN_SERVICE')" />
+		<intercept-url pattern="/app/**" access="hasAnyRole('ROLE_COMPANY_MIDDLEADMIN','ROLE_COMPANY_CREATOR','ROLE_ADMIN_SERVICE')" />
+		<intercept-url pattern="/template/**" access="hasRole('ROLE_ADMIN_SERVICE')" />
+		<intercept-url pattern="/man/**" access="hasAnyRole('ROLE_COMPANY_MIDDLEADMIN','ROLE_ADMIN_SERVICE','ROLE_INDIVIDUAL_MEMBER','ROLE_COMPANY_MEMBER','ROLE_COMPANY_DISTRIBUTOR')" />
+		<intercept-url pattern="/book/**" access="hasAnyRole('ROLE_COMPANY_MIDDLEADMIN','ROLE_COMPANY_CREATOR','ROLE_ADMIN_SERVICE')" />
+	 -->	
+		<intercept-url pattern="/contents/**" access="hasAnyRole('ROLE_ADMIN_SERVICE','ROLE_INDIVIDUAL_MEMBER','ROLE_COMPANY_MEMBER','ROLE_USER')" />
+		<intercept-url pattern="/app/**" access="hasAnyRole('ROLE_ADMIN_SERVICE','ROLE_INDIVIDUAL_MEMBER','ROLE_COMPANY_MEMBER','ROLE_USER')" />
+		<intercept-url pattern="/template/**" access="hasRole('ROLE_ADMIN_SERVICE')" />
+		<intercept-url pattern="/man/**" access="hasAnyRole('ROLE_ADMIN_SERVICE','ROLE_INDIVIDUAL_MEMBER','ROLE_COMPANY_MEMBER','ROLE_USER')" />
+		<intercept-url pattern="/distribute/**" access="hasAnyRole('ROLE_ADMIN_SERVICE','ROLE_INDIVIDUAL_MEMBER','ROLE_COMPANY_MEMBER','ROLE_USER')" />
+		
+		<intercept-url pattern="/mypage/**" access="hasAnyRole('ROLE_ADMIN_SERVICE','ROLE_INDIVIDUAL_MEMBER','ROLE_COMPANY_MEMBER','ROLE_USER')"/>
+		<intercept-url pattern="/my/**" access="hasAnyRole('ROLE_ADMIN_SERVICE','ROLE_INDIVIDUAL_MEMBER','ROLE_COMPANY_MEMBER','ROLE_USER')"/>
+		
+		<intercept-url pattern="/book/**" access="hasAnyRole('ROLE_ADMIN_SERVICE','ROLE_INDIVIDUAL_MEMBER','ROLE_COMPANY_MEMBER','ROLE_USER')" />
+		
+		
+		<!-- <intercept-url pattern="/**" requires-channel="https"/>  -->
+		<!-- <intercept-url pattern="/**" access="hasRole('ROLE_COMPANY_USER')" /> -->
+		
+		 
+		<form-login login-page='/index.html'  authentication-success-handler-ref="mySpecialAuthenticationSuccessHandler" authentication-failure-url="/index.html" />
+		 
+		<session-management>
+			<concurrency-control max-sessions="1" />
+		</session-management>
+		<logout logout-success-url="/index.html"  />
+	</http>
+
+	<authentication-manager>
+	    
+		<authentication-provider user-service-ref="myUserDetailsService" >
+		    <password-encoder hash="sha-256" />
+		</authentication-provider>
+		
+	</authentication-manager>
+
+	<!-- <beans:bean id="successHandler" class="com.clbee.pbcms.util.MySpecialAuthenticationSuccessHandler"/> -->
+	<beans:bean id="accessDecisionManager" class="org.springframework.security.access.vote.AffirmativeBased">
+	    <beans:constructor-arg>
+		    <beans:list>
+		      <beans:ref bean="roleHierarchyVoter" />
+		      <beans:bean class="org.springframework.security.web.access.expression.WebExpressionVoter">
+		        <beans:property name="expressionHandler" ref="webExpressionHandler"/>
+		      </beans:bean>
+		      <beans:bean class="org.springframework.security.access.vote.AuthenticatedVoter"/>
+		    </beans:list>
+ 		 </beans:constructor-arg>
+	</beans:bean>
+
+	<beans:bean id="roleHierarchy" class="org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl">
+	    <beans:property name="hierarchy">
+	        <beans:value>
+	        	<!-- ROLE_COMPANY_MIDDLEADMIN > ROLE_COMPANY_MEMBER -->
+	            <!-- ROLE_COMPANY_MEMBER > ROLE_COMPANY_DISTRIBUTOR --> 
+	            
+	            <!-- ROLE_COMPANY_DISTRIBUTOR > ROLE_COMPANY_CREATOR -->
+	            <!-- ROLE_COMPANY_CREATOR > ROLE_COMPANY_USER  -->
+	            
+	            <!-- ROLE_INDIVIDUAL_MEMBER > ROLE_COMPANY_DISTRIBUTOR -->
+	            <!-- ROLE_ADMIN_SERVICE > ROLE_COMPANY_CREATOR -->
+	        </beans:value>
+	    </beans:property>
+	</beans:bean>
+
+	<beans:bean id="roleHierarchyVoter"
+	            class="org.springframework.security.access.vote.RoleHierarchyVoter">
+	    <beans:constructor-arg ref="roleHierarchy"/>
+	</beans:bean>
+	
+	
+	<beans:bean id="sessionRegistry" class="org.springframework.security.core.session.SessionRegistryImpl" />
+
+</beans:beans>

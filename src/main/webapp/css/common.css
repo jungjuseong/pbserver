@@ -1,0 +1,121 @@
+@charset "utf-8";
+
+
+
+/* ----------------------------------------------------------------
+for Exploler
+---------------------------------------------------------------- */
+html {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+
+/* ----------------------------------------------------------------
+- Title : Common Cascading Style Sheets
+- Author : key
+- Date : 2015-02-23
+- Description : Common & Default CSS
+---------------------------------------------------------------- */
+
+/* default css_start */
+*{margin:0; padding:0;}
+body,p,
+h1,h2,h3,h4,h5,h6,
+ul,ol,li,dl,dt,dd,
+table,th,td,
+form,fieldset,legend,input,textarea,button{margin:0;padding:0;-webkit-text-size-adjust:none;}
+
+
+form.member_join_f label.error, label.error {
+	/* remove the next line when you have trouble in IE6 with labels in list */
+	color: red;
+	
+}
+
+
+
+@font-face{
+ font-family:ng;
+  src:url(../font/NanumGothic.eot);
+ src:local(※), url(../font/NanumGothic.woff) format('woff') 
+ }
+
+
+
+body,p,
+h1,h2,h3,h4,h5,h6,
+ul,ol,li,dl,dt,dd,
+form,fieldset,legend,input,textarea,button,select,label {font-family: Hiragino Kaku Gothic Pro, meiryo, NanumGothic, 나눔고딕, ng;font-size:13px;line-height:160%;color:#382a21;letter-spacing:0} 
+
+/*a:link, a:active{text-decoration:none;color:#363636;}
+a:visited{text-decoration:none;color:#363636;}
+a:hover{text-decoration:none;color:#a70e13;}*/
+
+ul, ol, li, dl, dt, dd {list-style:none;}
+p,form,h1,h2,h3,h4,h5,h6,fieldset,legend{font-weight:normal;}
+h1,h2,h3,h4,h5,h6{}
+hr{display:none;}
+
+img, form, input, select{border:0 none;vertical-align:middle;}
+table {border-collapse:collapse;border-spacing:0;width:100%;}
+
+a{ text-decoration:none; color:inherit; cursor:pointer;}
+a:hover{ text-decoration:underline;}
+a:active{cursor:pointer;}
+
+/* form관련 */
+caption{display:none;}
+label{cursor:pointer; vertical-align:middle;}
+fieldset{border:0;}
+legend{display:none;}
+label, button{cursor:pointer;}
+select, textarea, 
+input[type=file], 
+input[type=text],
+input[type=password]{ border:1px solid #b0b0b0; background:#fff;}
+input[type=button]	{cursor:pointer;}
+input[readonly]{ background:#eee !important;}
+textarea {
+    resize: none;
+    overflow-y: scroll;
+}
+
+.png24 {tmp:expression(setPng24(this));} 
+
+
+/* 특수 클래스 */
+.hidden		{ position:absolute; top:-10000px; font-size:0; line-height:0;}
+.underline	{text-decoration:underline;}
+.vTop		{ vertical-align:top;}	
+.vMiddle	{ vertical-align:middle;}
+.tCenter	{text-align:center !important;}
+.tLeft		{text-align:left !important;}
+.tRight		{text-align:right !important;}
+.fLeft		{float:left !important;}
+.fRight		{float:right !important;}
+.clear		{clear:both;}
+.spacing	{ letter-spacing:-0.06em;}
+.mt20		{ margin-top:20px !important;}
+.mt40		{ margin-top:40px !important;}
+.mb20		{ margin-bottom:20px !important;}
+.scrollit   { overflow-y:scroll;height:200px;}
+.outline    { border-style: solid;border-width: 2px; border-color: #EAEAEA;}
+.bottomline    { border-bottom-style: solid;border-bottom-width: 1px; border-color: #000000;}
+.rightline    { border-right-style: solid;border-right-width: 1px; border-color: #000000;}
+.defaultCursor { cursor:default}
+.preventTextSelection { -moz-user-select: none; -webkit-user-select: none; -ms-user-select:none; user-select:none;-o-user-select:none;"}
+
+/* font style */
+.bold		{font-weight:bold;}
+.white 		{color:#fff !important;}
+.black		{color:#000;}
+.text_red	{color:#dd0918}
+.text_green	{color:#51c504}
+.font13 {font-size:13px;}
+.font14 {font-size:14px;}
+.font24 {font-size:24px;font-weight:bold;letter-spacing:-0.1em}
+.normal	{font-weight:normal !important;}
+.eng 	{font-family:arial;letter-spacing:0}
+.small	{font-size:11px;}
+.big 	{font-size:20px;font-weight:bold;letter-spacing:-0.05em}

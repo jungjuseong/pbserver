@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="service.distribute.DistributeMapper">
+
+	<select id="selectMenu" resultType="com.clbee.pbcms.vo.GroupMenuVO">
+		SELECT 
+			menu_seq as menuSeq, menu_name as menuName, menu_description as menuDescription, connect_menu as connectMenu, must_yn as mustYn
+		FROM 
+			tb_group_menu
+		WHERE
+			menu_type=#{menu_type}
+		ORDER BY
+			menu_seq asc
+		;
+	</select>
+	
+	<insert id="insertGroupUser" parameterType="com.clbee.pbcms.vo.GroupUserVO">
+		INSERT INTO
+		tb_group_user(group_name, member_seq, company_seq, menu_large, menu_medium, menu_function, member_gb) 
+		VALUES(#{groupName},#{memberSeq},#{companySeq},#{menuLarge},#{menuMedium},#{menuFunction},#{memberGb});
+	</insert>
+
+	<select id="selectListMemberGroup" parameterType="com.clbee.pbcms.vo.GroupList" resultType="com.clbee.pbcms.vo.GroupUserVO">
+		SELECT 
+			group_seq as groupSeq, group_name as groupName, member_seq as memberSeq, company_seq as companySeq, menu_large as menuLarge, menu_medium as menuMedium, menu_function as menuFunction
+		FROM 
+			tb_group_user
+		WHERE
+			member_seq != 0
+			AND
+		    company_seq = 0
+			<choose>
+			    <when test="searchValue != null">
+			    AND
+			    group_name like CONCAT('%', #{searchValue}, '%')
+				</when>
+			</choose>
+		UNION
+		SELECT
+			group_seq as groupSeq, group_name as groupName, member_seq as memberSeq, company_seq as companySeq, menu_large as menuLarge, menu_medium as menuMedium, menu_function as menuFunction
+		FROM 
+			tb_group_user
+		WHERE
+			member_seq=0
+			AND
+			company_seq=0
+			AND
+			member_gb is not null
+			<choose>
+			    <when test="searchValue != null">
+			    AND
+			    group_name like CONCAT('%', #{searchValue}, '%')
+				</when>
+			</choose>
+		ORDER BY
+			groupSeq desc, groupName desc
+		LIMIT #{startNo}, 10
+		;
+	</select>
+
+	<select id="totalCountMemberGroup" resultType="java.lang.Integer">
+		select 
+			count(*)
+		from
+		(
+			SELECT 
+				group_seq as groupSeq, group_name as groupName, member_seq as memberSeq, company_seq as companySeq, menu_large as menuLarge, menu_medium as menuMedium, menu_function as menuFunction
+			FROM
+				tb_group_user
+			WHERE
+				member_seq != 0
+				AND
+				company_seq = 0
+				<choose>
+				    <when test="searchValue != null">
+				    AND
+				    group_name like CONCAT('%', #{searchValue}, '%')
+					</when>
+				</choose>
+			UNION
+			SELECT
+				group_seq as groupSeq, group_name as groupName, member_seq as memberSeq, company_seq as companySeq, menu_large as menuLarge, menu_medium as menuMedium, menu_function as menuFunction
+			FROM 
+				tb_group_user
+			WHERE
+				member_seq=0
+				AND
+				company_seq=0
+				AND
+				member_gb is not null
+				<choose>
+				    <when test="searchValue != null">
+				    AND
+				    group_name like CONCAT('%', #{searchValue}, '%')
+					</when>
+				</choose>
+		) userGroup
+		;
+	</select>
+
+	<select id="selectListUserGroup" parameterType="com.clbee.pbcms.vo.GroupList" resultType="com.clbee.pbcms.vo.GroupUserVO">
+		SELECT 
+			group_seq as groupSeq, group_name as groupName, member_seq as memberSeq, company_seq as companySeq, menu_large as menuLarge, menu_medium as menuMedium, menu_function as menuFunction
+		FROM 
+			tb_group_user
+		WHERE
+			member_seq != 0
+			AND
+		    company_seq = #{companySeq}
+			<choose>
+			    <when test="searchValue != null">
+			    AND
+			    group_name like CONCAT('%', #{searchValue}, '%')
+				</when>
+			</choose>
+		UNION
+		SELECT
+			group_seq as groupSeq, group_name as groupName, member_seq as memberSeq, company_seq as companySeq, menu_large as menuLarge, menu_medium as menuMedium, menu_function as menuFunction
+		FROM 
+			tb_group_user
+		WHERE
+			member_seq=0
+			AND
+			company_seq=0
+			AND
+			member_gb is null
+			<choose>
+			    <when test="searchValue != null">
+			    AND
+			    group_name like CONCAT('%', #{searchValue}, '%')
+				</when>
+			</choose>
+		ORDER BY
+			groupSeq desc, groupName desc
+		LIMIT #{startNo}, 10
+		;
+	</select>
+
+	<select id="totalCountUserGroup" resultType="java.lang.Integer">
+		select 
+			count(*)
+		from
+		(
+			SELECT 
+				group_seq as groupSeq, group_name as groupName, member_seq as memberSeq, company_seq as companySeq, menu_large as menuLarge, menu_medium as menuMedium, menu_function as menuFunction
+			FROM
+				tb_group_user
+			WHERE
+				member_seq != 0
+				AND
+				company_seq = #{companySeq}
+				<choose>
+				    <when test="searchValue != null">
+				    AND
+				    group_name like CONCAT('%', #{searchValue}, '%')
+					</when>
+				</choose>
+			UNION
+			SELECT
+				group_seq as groupSeq, group_name as groupName, member_seq as memberSeq, company_seq as companySeq, menu_large as menuLarge, menu_medium as menuMedium, menu_function as menuFunction
+			FROM 
+				tb_group_user
+			WHERE
+				member_seq=0
+				AND
+				company_seq=0
+				AND
+				member_gb is null
+				<choose>
+				    <when test="searchValue != null">
+				    AND
+				    group_name like CONCAT('%', #{searchValue}, '%')
+					</when>
+				</choose>
+		) userGroup
+		;
+	</select>
+
+	<select id="groupNameOverlap" parameterType="String" resultType="java.lang.Integer">
+		SELECT 
+			count(*)
+		FROM
+			tb_group_user
+		WHERE
+			group_name=#{groupName}
+		;
+	</select>
+	
+	<delete id="deleteGroup" parameterType="java.lang.Integer">
+		DELETE FROM
+			tb_group_user
+		WHERE
+			group_seq=#{numGroupSeq}
+	</delete>
+	
+	<select id="selectGroupInfo" resultType="com.clbee.pbcms.vo.GroupUserVO">
+		SELECT 
+			group_seq as groupSeq, group_name as groupName, menu_medium as menuMedium, menu_function as menuFunction, member_gb as memberGb
+		FROM
+		    tb_group_user
+		WHERE
+			group_seq=#{groupSeq}
+		;
+	</select>
+	
+	<update id="updateGroupUser" parameterType="com.clbee.pbcms.vo.GroupUserVO">
+		UPDATE
+			tb_group_user
+		SET
+			group_name=#{groupName},
+			menu_large=#{menuLarge},
+			menu_medium=#{menuMedium},
+			menu_function=#{menuFunction}
+		WHERE
+			group_seq=#{groupSeq}
+		;
+	</update>
+	
+	<select id="getSelectListGroup" parameterType="java.lang.Integer" resultType="com.clbee.pbcms.vo.GroupUserVO">
+		SELECT 
+			group_seq as groupSeq, group_name as groupName, member_gb as memberGb 
+		FROM
+		    tb_group_user
+		WHERE
+			member_seq != 0
+			AND
+			company_seq=#{companySeq}
+		UNION
+		SELECT
+			group_seq as groupSeq, group_name as groupName, member_gb as memberGb
+		FROM 
+			tb_group_user
+		WHERE
+			member_seq=0
+			AND
+			company_seq=0
+			AND
+			<choose>
+				<when test="_parameter == 0">
+					member_gb is not null
+				</when>
+				<otherwise>
+					member_gb is null
+				</otherwise>
+			</choose>
+		ORDER BY
+			<if test="_parameter == 0">
+			memberGb desc, 
+			</if>
+			groupSeq asc
+		;
+	</select>
+	
+	<select id="deleteCheck" resultType="java.lang.Integer">
+		select 
+			count(*)
+		from
+			tb_member
+		where
+			group_name=#{numGroupSeq}
+		;
+	</select>
+
+</mapper>

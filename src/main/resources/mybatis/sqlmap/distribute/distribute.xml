@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="service.distribute.DistributeMapper">
+
+	<select id="selectAppList" parameterType="hashmap" resultType="com.clbee.pbcms.vo.AppVO">
+		SELECT 
+			app_seq as appSeq, app_name as appName, ver_num as verNum, ostype, reg_gb as regGb, app_contents_amt as appContentsAmt, 
+			app_size as appSize, reg_dt as regDt, distribute_req_dt as distributeReqDt, distribute_request_id as distributeRequestId
+		FROM 
+			tb_app
+		WHERE
+			complet_gb='3'
+			<choose>
+				<when test="companyGb == 1">
+					<choose>
+						<when test='myListGb == "n"'>
+							AND distribute_request_id IN (
+								SELECT 
+									user_id
+								FROM 
+									tb_member 
+								WHERE 
+									company_seq IN (
+										SELECT 
+											company_seq 
+										FROM 
+											tb_member 
+										WHERE user_seq=#{userSeq}
+									)
+							)
+						</when>
+						<when test='myListGb == "y"'>
+							AND distribute_request_id = (SELECT user_id FROM tb_member WHERE user_seq=#{userSeq})
+						</when>
+					</choose>
+				</when>
+				<when test="companyGb == 2">
+					AND distribute_request_id = (SELECT user_id FROM tb_member WHERE user_seq=#{userSeq})
+				</when>
+			</choose>
+		ORDER BY
+			distribute_req_dt ASC
+		LIMIT ${startNum}, 10
+		;
+	</select>
+
+	<select id="selectInappList" parameterType="hashmap" resultType="com.clbee.pbcms.vo.InappVO">
+		SELECT 
+			inapp_seq as inappSeq, inapp_name as inappName, ver_num as verNum, category_name as categoryName, inapp_size as inappSize, reg_dt as regDt, 
+			distribute_req_dt as distributeReqDt, store_bundle_id as storeBundleId, distribute_request_id as distributeRequestId
+		FROM 
+			tb_inapp
+		WHERE
+			complet_gb='3'
+			<choose>
+				<when test="companyGb == 1">
+					<choose>
+						<when test='myListGb == "n"'>
+							AND distribute_request_id IN (
+								SELECT 
+									user_id
+								FROM 
+									tb_member 
+								WHERE 
+									company_seq IN (
+										SELECT 
+											company_seq 
+										FROM 
+											tb_member 
+										WHERE user_seq=#{userSeq}
+									)
+							)
+						</when>
+						<when test='myListGb == "y"'>
+							AND distribute_request_id = (SELECT user_id FROM tb_member WHERE user_seq=#{userSeq})
+						</when>
+					</choose>
+				</when>
+				<when test="companyGb == 2">
+					AND distribute_request_id = (SELECT user_id FROM tb_member WHERE user_seq=#{userSeq})
+				</when>
+			</choose>
+		ORDER BY
+			distribute_req_dt ASC
+		LIMIT ${startNum}, 10
+		;
+	</select>
+
+	<select id="selectContentsList" parameterType="hashmap" resultType="com.clbee.pbcms.vo.ContentVO">
+		SELECT 
+			contents_seq as contentsSeq, contents_name as contentsName, ver_num as verNum, contents_type as contentsType, app_name as appName, 
+			contents_size as contentsSize, reg_dt as regDt, distribute_req_dt as distributeReqDt, distribute_request_id as distributeRequestId
+		FROM 
+			tb_contents
+		WHERE
+			complet_gb='3'
+			<choose>
+				<when test="companyGb == 1">
+					<choose>
+						<when test='myListGb == "n"'>
+							AND distribute_request_id IN (
+								SELECT 
+									user_id
+								FROM 
+									tb_member 
+								WHERE 
+									company_seq IN (
+										SELECT 
+											company_seq 
+										FROM 
+											tb_member 
+										WHERE user_seq=#{userSeq}
+									)
+							)
+						</when>
+						<when test='myListGb == "y"'>
+							AND distribute_request_id = (SELECT user_id FROM tb_member WHERE user_seq=#{userSeq})
+						</when>
+					</choose>
+				</when>
+				<when test="companyGb == 2">
+					AND distribute_request_id = (SELECT user_id FROM tb_member WHERE user_seq=#{userSeq})
+				</when>
+			</choose>
+		ORDER BY
+			distribute_req_dt ASC
+		LIMIT ${startNum}, 10
+		;
+	</select>
+ 
+ 	<select id="totalCount" parameterType="hashmap" resultType="java.lang.Integer">
+		SELECT 
+			count(*)
+		FROM
+			<choose> 
+				<when test='objectGb == "app"'>
+				tb_app
+				</when>
+				<when test='objectGb == "inapp"'>
+				tb_inapp
+				</when>
+			    <when test='objectGb == "contents"'>
+				tb_contents
+				</when>
+			</choose>
+		WHERE
+			complet_gb='3'
+			<choose>
+				<when test="companyGb == 1">
+					<choose>
+						<when test='myListGb == "n"'>
+							AND distribute_request_id IN (
+								SELECT 
+									user_id
+								FROM 
+									tb_member 
+								WHERE 
+									company_seq IN (
+										SELECT 
+											company_seq 
+										FROM 
+											tb_member 
+										WHERE user_seq=#{userSeq}
+									)
+							)
+						</when>
+						<when test='myListGb == "y"'>
+							AND distribute_request_id = (SELECT user_id FROM tb_member WHERE user_seq=#{userSeq})
+						</when>
+					</choose>
+				</when>
+				<when test="companyGb == 2">
+					AND distribute_request_id = (SELECT user_id FROM tb_member WHERE user_seq=#{userSeq})
+				</when>
+			</choose>
+		;
+	</select>
+	
+	<select id="selectDistributeReqInfo" parameterType="com.clbee.pbcms.vo.DistributeRestoreVO" resultType="com.clbee.pbcms.vo.DistributeRestoreVO">
+		SELECT
+			distribute_req_dt as distributeReqDt, distribute_request_id as distributeRequestId
+		FROM
+			<choose> 
+				<when test='type.equals("app")'>
+				tb_app
+				</when>
+				<when test='type.equals("inapp")'>
+				tb_inapp
+				</when>
+			    <when test='type.equals("contents")'>
+				tb_contents
+				</when>
+			</choose>
+		WHERE			
+			<choose> 
+				<when test='type.equals("app")'>
+				app_seq=#{existSeq}
+				</when>
+				<when test='type.equals("inapp")'>
+				inapp_seq=#{existSeq}
+				</when>
+			    <when test='type.equals("contents")'>
+				contents_seq=#{existSeq}
+				</when>
+			</choose>
+		;
+	</select>
+	
+	<insert id="insertDistributeRestore" parameterType="com.clbee.pbcms.vo.DistributeRestoreVO">
+		insert into 
+		tb_distribute_restore(type, exist_seq, distribute_req_dt, distribute_restore_dt, restore_user_id, restore_text, distribute_request_id) 
+		values(
+			<choose> 
+				<when test='type.equals("app")'>
+				'1'
+				</when>
+				<when test='type.equals("inapp")'>
+				'2'
+				</when>
+			    <when test='type.equals("contents")'>
+				'3'
+				</when>
+			</choose>
+			,#{existSeq},#{distributeReqDt},#{distributeRestoreDt},#{restoreUserId},#{restoreText},#{distributeRequestId});
+	</insert>
+	
+	<update id="updateRestoreStatus" parameterType="com.clbee.pbcms.vo.DistributeRestoreVO">
+		UPDATE
+			<choose> 
+				<when test='type.equals("app")'>
+				tb_app
+				</when>
+				<when test='type.equals("inapp")'>
+				tb_inapp
+				</when>
+			    <when test='type.equals("contents")'>
+				tb_contents
+				</when>
+			</choose>
+		SET
+			complet_gb = '4'
+		WHERE
+			<choose> 
+				<when test='type.equals("app")'>
+				app_seq=#{existSeq}
+				</when>
+				<when test='type.equals("inapp")'>
+				inapp_seq=#{existSeq}
+				</when>
+			    <when test='type.equals("contents")'>
+				contents_seq=#{existSeq}
+				</when>
+			</choose>
+		;
+	</update>
+	
+	<select id="selectForRestore" parameterType="com.clbee.pbcms.vo.DistributeRestoreVO" resultType="com.clbee.pbcms.vo.DistributeRestoreVO">
+		SELECT 
+			restore_seq as restoreSeq, type, exist_seq as existSeq, distribute_req_dt as distributeReqDt, distribute_restore_dt as distributeRestoreDt, 
+			restore_user_id as restoreUserId, restore_text as restoreText, distribute_request_id as distributeRequestId
+		FROM 
+			tb_distribute_restore
+		WHERE
+			<choose> 
+				<when test='type.equals("app")'>
+				type='1'
+				</when>
+				<when test='type.equals("inapp")'>
+				type='2'
+				</when>
+			    <when test='type.equals("contents")'>
+				type='3'
+				</when>
+			</choose>
+			and exist_seq=#{existSeq}
+		ORDER BY restore_seq DESC;
+	</select>
+
+</mapper>

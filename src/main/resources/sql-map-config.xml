@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<configuration>
+
+	<settings>
+		<setting name="cacheEnabled" value="TRUE"/> <!-- 설정에서 각 mapper에 설정된 캐시를 전역적으로 사용할지 말지에 대한 여부 (true | false) default(TRUE) -->
+		<setting name="lazyLoadingEnabled" value="FALSE"/> <!-- 늦은 로딩을 사용할지에 대한 여부. 사용하지 않는다면 모두 즉시 로딩할 것이다. (true | false) default(TRUE) -->
+		<setting name="aggressiveLazyLoading" value="TRUE"/> <!-- 활성화 상태로 두게 되면 늦은(lazy) 로딩 프로퍼티를 가진 객체는 호출에 따라 로드될 것이다. 반면에 개별 프로퍼티는 요청할때 로드된다. (true | false) default(TRUE) -->
+		<setting name="multipleResultSetsEnabled" value="TRUE"/> <!-- 한개의 구문에서 여러개의 ResultSet을 허용할지의 여부(드라이버가 해당 기능을 지원해야 함) (true | false) default(TRUE) -->
+		<setting name="useColumnLabel" value="TRUE"/> <!-- 칼럼명 대신에 칼럼라벨을 사용. 드라이버마다 조금 다르게 작동한다. 문서와 간단한 테스트를 통해 실제 기대하는 것처럼 작동하는지 확인해야 한다. (true | false) default(TRUE) -->
+		<setting name="useGeneratedKeys" value="FALSE"/> <!-- 생성키에 대한 JDBC지원을 허용. 지원하는 드라이버가 필요하다. true로 설정하면 생성키를 강제로 생성한다. 일부 드라이버(예를들면, Derby)에서는 이 설정을 무시한다. (true | false) default(FALSE) -->
+		<setting name="autoMappingBehavior" value="PARTIAL"/> <!-- MyBatis가 칼럼을 필드/프로퍼티에 자동으로 매핑할지와 방법에 대해 명시. PARTIAL은 간단한 자동매핑만 할뿐, 내포된 결과에 대해서는 처리하지 않는다. FULL은 처리가능한 모든 자동매핑을 처리한다. (NONE, PARTIAL, FULL) default(PARTIAL) -->
+		<setting name="defaultExecutorType" value="REUSE"/> <!-- 디폴트 실행자(executor) 설정. SIMPLE 실행자는 특별히 하는 것이 없다. REUSE 실행자는 PreparedStatement 를 재사용한다. BATCH실행자는 구문을 재사용하고 수정을 배치처리한다. (SIMPLE, REUSE, BATCH) default(SIMPLE) -->
+		<setting name="defaultStatementTimeout" value="60000"/> <!-- 데이터베이스로의 응답을 얼마나 오래 기다릴지를 판단하는 타임아웃을 셋팅 (양수) default() -->
+		<setting name="callSettersOnNulls" value="TRUE"/><!-- resultType으로 hashmap 지정시 value값이 null일때 컬럼이 누락되는 문제 해결 -->
+	</settings>
+
+	<typeAliases>
+		<!-- <typeAlias alias="otherMap" type="com.clbee.pbcms.util.map.DsgMap"/> -->
+		<!--
+		predefined alias
+		
+		[TYPE] - alias
+		______________________________
+		[Byte] - _byte, byte,
+		[Long] - _long, long, 
+		[Short] - _short, short, 
+		[Int] - _int, int, 
+		[int] - _integer, integer, 
+		[double] - _double, double, 
+		[float] - _float, float, 
+		[boolean] - _boolean, boolean, 
+		[String] - string, 
+		[Date] - date, 
+		[BigDecimal] - decimal, bigdecimal, 
+		[Object] - object, 
+		[Map] - map, 
+		[HashMap] - hashmap, 
+		[List] - list, 
+		[ArrayList] - arraylist, 
+		[Collection] - collection, 
+		[Iterator] - iterator, 
+		-->
+	</typeAliases>
+	
+	<!--
+	<typeHandlers>
+		<typeHandler javaType="String" jdbcType="VARCHAR" handler="org.mybatis.example.ExampleTypeHandler"/>
+	</typeHandlers>
+	-->
+	
+	<!--
+	<objectFactory type="org.mybatis.example.ExampleObjectFactory">
+		<property name="someProperty" value="100"/>
+	</objectFactory>
+	-->
+	
+	<!--
+	<plugins>
+		<plugin interceptor="org.mybatis.example.ExamplePlugin">
+			<property name="someProperty" value="100"/>
+		</plugin>
+	</plugins>
+	-->
+	
+	<!--
+	<environments default="development">
+		<environment id="development">
+			<transactionManager type="JDBC">
+				<property name="..." value="..."/>
+			</transactionManager>
+			<dataSource type="POOLED">
+				<property name="driver" value="${driver}"/>
+				<property name="url" value="${url}"/>
+				<property name="username" value="${username}"/>
+				<property name="password" value="${password}"/>
+			</dataSource>
+		</environment>
+	</environments>
+	-->
+
+	<!--
+	<mappers>
+		<mapper resource="sqlmap/sys/dummy.xml" />
+	</mappers>
+	-->
+
+</configuration>
+
+<!--
+0. sql 은 xml 로만 생성한다.
+1. insert 문에 사용될 키는 java 에서 생성하고 전달하도록 한다.
+2. 문자열대체( "${}" ) 는 사용하지 않는다.
+-->

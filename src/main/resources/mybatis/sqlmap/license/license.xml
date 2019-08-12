@@ -1,0 +1,408 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="service.license.LicenseMapper">
+	
+	<select id="checkUseLicense" parameterType="java.lang.Integer" resultType="java.lang.Integer">
+		SELECT 
+			count(*)
+		FROM
+			tb_license
+		WHERE
+			license_user_seq = #{userSeq}
+			AND
+			license_status = 2
+		;
+	</select>
+
+	<select id="selectListLicense" parameterType="com.clbee.pbcms.vo.LicenseList" resultType="com.clbee.pbcms.vo.LicenseVO">
+		SELECT
+			license.license_seq as licenseSeq, license.license_num as licenseNum, license.license_status as licenseStatus, 
+			license.generate_dt as generateDt, license.regist_dt as registDt, expire_dt as expireDt, 
+			license.user_copy_count as userCopyCount, member.user_id as userId, license.license_gb as licenseGb,
+			period_gb as periodGb
+		FROM
+			tb_license as license
+		LEFT OUTER JOIN
+			tb_member as member
+		ON
+			license.license_user_seq = member.user_seq
+		WHERE
+			1=1
+			<if test="searchStatus != 0">
+			AND license.license_status = #{searchStatus}
+			</if>
+			<if test="searchMember != null and searchMember != ''">
+			AND member.user_id like CONCAT('%', #{searchMember}, '%')
+			</if>
+		ORDER BY
+			licenseSeq DESC
+		LIMIT #{startNo}, 10
+		;
+	</select>
+
+	<select id="totalCountLicense" parameterType="com.clbee.pbcms.vo.LicenseList" resultType="java.lang.Integer">
+		SELECT
+			count(*)
+		FROM
+		(
+			SELECT
+				license.license_seq as licenseSeq, license.license_num as licenseNum, license.license_status as licenseStatus, 
+				license.generate_dt as generateDt, license.regist_dt as registDt, expire_dt as expireDt, 
+				license.user_copy_count as userCopyCount, member.user_id as userId, license.license_gb as licenseGb
+			FROM
+				tb_license as license
+			LEFT OUTER JOIN
+				tb_member as member
+			ON
+				license.license_user_seq = member.user_seq
+			WHERE
+				1=1
+				<if test="searchStatus != 0">
+				AND license.license_status = #{searchStatus}
+				</if>
+				<if test="searchMember != null and searchMember != ''">
+				AND member.user_id like CONCAT('%', #{searchMember}, '%')
+				</if>
+		) license
+		;
+	</select>
+	
+	<select id="dupleCheck" parameterType="String" resultType="java.lang.Integer">
+		SELECT 
+			count(*)
+		FROM
+			tb_license
+		WHERE
+			license_num = #{searchStatus}
+		;
+	</select>
+	
+	<insert id="insertLicense" parameterType="com.clbee.pbcms.vo.LicenseVO">
+		INSERT INTO
+		tb_license(license_num, license_status, generate_dt, user_copy_count, period_gb) 
+		VALUES(#{licenseNum},#{licenseStatus},NOW(),#{userCopyCount},#{periodGb});
+	</insert>
+	
+	<update id="disposalLicense" parameterType="hashmap">
+		UPDATE
+			tb_license
+		SET
+			license_status=4,
+			disposal_reason=#{disposalReasonText}
+		WHERE
+			license_seq=#{licenseSeq}
+		;
+	</update>
+	
+	<select id="licenseRegistCheck" parameterType="String" resultType="com.clbee.pbcms.vo.LicenseVO">
+		SELECT 
+			license_Status as licenseStatus, license_user_seq as licenseMemberSeq
+		FROM
+			tb_license
+		WHERE
+			license_num = #{license}
+		;
+	</select>
+	
+	<update id="licenseRegist" parameterType="com.clbee.pbcms.vo.LicenseVO">
+		UPDATE
+			tb_license
+		SET
+			license_status=2,
+			license_user_seq=#{licenseUserSeq},
+			regist_dt=NOW(),
+			expire_dt=
+				CASE
+					WHEN period_gb = 1 THEN date_add(date_add(CURDATE(), INTERVAL 1 YEAR), INTERVAL -1 DAY)
+					WHEN period_gb = 2 THEN date_add(date_add(CURDATE(), INTERVAL 1 MONTH), INTERVAL -1 DAY)
+					WHEN period_gb = 3 THEN null
+				END
+		WHERE
+			license_num=#{licenseNum}
+		;
+	</update>
+
+	<select id="selectMyLicense" parameterType="java.lang.Integer" resultType="com.clbee.pbcms.vo.LicenseVO">
+		SELECT
+			license.license_seq as licenseSeq, license.license_num as licenseNum, license.user_copy_count as userCopyCount,
+			license.regist_dt as registDt, license.expire_dt as expireDt, license.license_gb as licenseGb, license.period_gb as periodGb,
+			CASE
+				WHEN license.period_gb = 3 THEN -1
+				ELSE DATEDIFF(license.expire_dt, CURDATE())
+			END as remainDt,
+			(SELECT COUNT(*) FROM tb_license_sub WHERE license_seq=license.license_seq ) as licenseUser
+		FROM
+			tb_license as license
+		WHERE
+			license_user_seq = #{userSeq}
+			AND
+			license_status = 2
+		ORDER BY
+			licenseSeq DESC
+		;
+	</select>
+	
+	<update id="licenseExpire" parameterType="java.lang.Integer">
+		UPDATE
+			tb_license
+		SET
+			license_status=3,
+			expire_dt=NOW()
+		WHERE
+			license_seq=#{licenseSeq}
+		;
+	</update>
+	
+	<select id="totalCountDevice" parameterType="com.clbee.pbcms.vo.LicenseList" resultType="java.lang.Integer">
+		SELECT 
+			count(*)
+		FROM
+			tb_license_sub as licenseUser
+			INNER JOIN tb_member as member
+			ON licenseUser.license_user_seq = member.user_seq
+		WHERE
+			licenseUser.license_seq = #{licenseSeq}
+			<choose>
+			    <when test="searchValue != null">
+			    AND
+			    member.user_id like CONCAT('%', #{searchValue}, '%')
+				</when>
+			</choose>
+		;
+	</select>
+	
+	<select id="selectListDevice" parameterType="com.clbee.pbcms.vo.LicenseList" resultType="com.clbee.pbcms.vo.LicenseSubVO">
+		SELECT 
+			licenseUser.device_name as deviceName, licenseUser.device_os as deviceOs, licenseUser.use_start_dt as useStartDt, 
+			licenseUser.licensesub_seq as licensesubSeq, member.user_id as userId
+		FROM
+			tb_license_sub as licenseUser
+			INNER JOIN tb_member as member
+			ON licenseUser.license_user_seq = member.user_seq
+		WHERE
+			licenseUser.license_seq = #{licenseSeq}
+			<choose>
+			    <when test="searchValue != null">
+			    AND
+			    member.user_id like CONCAT('%', #{searchValue}, '%')
+				</when>
+			</choose>
+		ORDER BY
+			licenseUser.use_start_dt DESC, licenseUser.licensesub_seq DESC
+		LIMIT #{startNo}, 5
+		;
+	</select>
+	
+	<delete id="deleteLicenseUseDevice" parameterType="java.lang.Integer">
+		DELETE FROM
+			tb_license_sub
+		WHERE
+			licensesub_seq=#{licensesubSeq}
+		;
+	</delete>
+	
+	<delete id="deleteLicenseSub" parameterType="java.lang.Integer">
+		DELETE FROM
+			tb_license_sub
+		WHERE
+			license_seq=#{licenseSeq}
+		;
+	</delete>
+	
+	<select id="checkAccountStatus" parameterType="com.clbee.pbcms.Json.ConnectLicenseInfo" resultType="com.clbee.pbcms.vo.MemberVO">
+		SELECT 
+			user_seq as userSeq, company_seq as companySeq, user_gb as userGb, user_status as userStatus
+		FROM
+			tb_member
+		WHERE
+			user_id = #{userId}
+			and user_pw = #{userPwd}
+		;
+	</select>
+	
+	<select id="checkRegistLicenseWithAccount" parameterType="com.clbee.pbcms.Json.ConnectLicenseInfo" resultType="com.clbee.pbcms.vo.LicenseVO">
+		SELECT 
+			license_seq as licenseSeq, license_status as licenseStatus, user_copy_count as userCopyCount
+		FROM 
+			tb_license 
+		WHERE 
+			license_user_seq=(
+				SELECT 
+					CASE
+						WHEN company_gb = 2 THEN user_seq
+						WHEN company_gb = 1 THEN
+							CASE
+								WHEN user_gb = 63 THEN (
+									SELECT
+										user_seq
+									FROM
+										tb_member
+									WHERE
+										company_seq = #{companySeq}
+										AND
+										user_gb = 127
+								)
+								WHEN user_gb = 127 THEN user_seq
+							END
+					END
+				FROM
+					tb_member
+				WHERE
+					user_seq=#{userSeq}
+			)
+			AND license_status = 2
+		;
+	</select>
+	
+	<insert id="licenseUserRegist" parameterType="com.clbee.pbcms.Json.ConnectLicenseInfo">
+		<selectKey keyProperty="deviceSeq" resultType="String" order="AFTER">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+		INSERT INTO
+		tb_license_sub(license_seq, license_user_seq, device_name, device_os, use_start_dt) 
+		VALUES( #{licenseSeq}, #{userSeq}, #{deviceName}, #{deviceOs}, NOW() );
+	</insert>
+	
+	<select id="selectLicenseDisposalReason" parameterType="java.lang.Integer" resultType="String">
+		SELECT 
+			disposal_reason as disposalReason
+		FROM
+			tb_license
+		WHERE
+			license_seq = #{licenseSeq}
+		;
+	</select>
+
+	<select id="getLicenseUserCount" parameterType="java.lang.Integer" resultType="java.lang.Integer">
+		SELECT 
+			count(*)
+		FROM
+			tb_license_sub
+		WHERE
+			license_seq = #{licenseSeq}
+		;
+	</select>
+	
+	<select id="checkLicenseUserExist" parameterType="java.lang.Integer" resultType="java.lang.Integer">
+		SELECT 
+			count(*)
+		FROM
+			tb_license_sub
+		WHERE
+			license_user_seq = #{userSeq}
+		;
+	</select>
+	
+	<delete id="deleteLicenseSubByUserSeq" parameterType="java.lang.Integer">
+		DELETE FROM
+			tb_license_sub
+		WHERE
+			license_user_seq = #{userSeq}
+		;
+	</delete>
+	
+	<select id="licenseAuthCheckWithDevice" parameterType="com.clbee.pbcms.Json.ConnectLicenseInfo" resultType="com.clbee.pbcms.Json.ConnectLicenseInfo">
+		SELECT 
+			licensesub_seq as deviceSeq, license_seq as licenseSeq, license_user_seq as userSeq
+		FROM
+			tb_license_sub
+		WHERE
+			licensesub_seq = #{deviceSeq}
+		;
+	</select>
+	
+	<select id="checkAccountStatusByUserSeq" parameterType="java.lang.Integer" resultType="java.lang.Integer">
+		SELECT 
+			count(*)
+		FROM
+			tb_member
+		WHERE
+			user_seq = #{userSeq}
+		;
+	</select>
+	
+	<select id="checkLicenseStatusByLicenseSeq" parameterType="java.lang.Integer" resultType="java.lang.Integer">
+		SELECT 
+			count(*)
+		FROM
+			tb_license
+		WHERE
+			license_seq = #{licenseSeq}
+		;
+	</select>
+	
+	<select id="selectLicenseUseCompany" parameterType="java.lang.Integer" resultType="String">
+		SELECT 
+			count(*)
+		FROM
+			tb_license
+		WHERE
+			license_seq = #{licenseSeq}
+		;
+	</select>
+	
+	<update id="licenseExpireEveryday">
+		<![CDATA[ 
+		UPDATE
+			tb_license
+		SET
+			license_status=3
+		WHERE
+			license_seq IN (
+				SELECT
+					license_seq
+				FROM(
+					SELECT
+						license_seq
+					FROM
+						tb_license
+					WHERE
+						DATEDIFF(expire_dt, CURDATE()) < 0
+				) AS license
+			)
+		;
+		]]>
+	</update>
+	
+	<select id="licenseExpireAlertEveryday" resultType="java.util.HashMap">
+		SELECT
+			member.last_name as lastName, member.first_name as firstName, member.email as email, DATE_FORMAT(license.expireDt, '%Y-%m-%d') as expireDt
+		FROM
+			(
+				SELECT
+					license_user_seq as licenseUserSeq, expire_dt as expireDt
+				FROM
+					tb_license
+				WHERE
+					license_status = 2
+					AND
+					CASE
+						WHEN period_gb = 1 THEN	TIMESTAMPDIFF(DAY, CURDATE(), expire_dt) = 30
+						WHEN period_gb = 2 THEN	TIMESTAMPDIFF(DAY, CURDATE(), expire_dt) = 14
+					END
+			) as license
+		    INNER JOIN tb_member as member
+		    ON license.licenseUserSeq = member.user_seq
+		;
+	</select>
+	
+	<select id="selectLicenseUseCompanyName" parameterType="java.lang.Integer" resultType="String">
+		SELECT 
+			CASE
+				WHEN member.company_gb = 2 THEN CONCAT(member.last_name, member.first_name)
+				WHEN member.company_gb = 1 THEN (
+					SELECT 
+						company_name
+					FROM 
+						tb_company
+					WHERE
+						company_seq = member.company_seq
+				)
+			END licenseUseName
+		FROM
+			tb_member as member
+		WHERE
+			user_seq=#{userSeq} 
+		;
+	</select>
+
+</mapper>

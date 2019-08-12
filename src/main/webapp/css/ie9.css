@@ -1,0 +1,5 @@
+@charset "utf-8";
+
+/* CSS Document */
+#container input[type=file]{ width:97%; height:38px;}
+.distribution_area input[type=file]{ width:100% !important; height:38px;}

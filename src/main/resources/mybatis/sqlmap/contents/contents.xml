@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="service.contents.ContentsMapper">
+	<!-- 20180327 - lsy : develop version managemenet -->
+	<select id="verValidationContents" parameterType="java.util.List" resultType="java.lang.Integer">
+		SELECT 
+			count(*)
+		FROM
+		    tb_contents
+		WHERE
+			<foreach collection="list" item="item">
+			    contents_name = #{item.contentsName}
+			    AND
+			    ver_num = #{item.ver_num}
+			</foreach>
+		;
+	</select>
+	
+	<select id="verValidationHistory" parameterType="java.util.List" resultType="java.lang.Integer">
+		SELECT 
+			count(*)
+		FROM
+		    tb_contentshistory
+		WHERE
+			<foreach collection="list" item="item">
+			    contents_name = #{item.contentsName}
+			    AND
+			    ver_num = #{item.ver_num}
+			</foreach>
+		;
+	</select>
+	
+	<select id="sameVerCheck" resultType="java.lang.Integer">
+		SELECT 
+			count(*)
+		FROM
+		    tb_contents
+		WHERE
+		    contents_name = #{contentsName}
+		    AND
+		    complet_gb = 1
+		;
+	</select>
+	
+	<select id="getSameContentsSeq" resultType="java.lang.String">
+		SELECT 
+			contents_seq
+		FROM
+		    tb_contents
+		WHERE
+		    contents_name = #{contentsName}
+		    AND
+		    complet_gb = 1
+		;
+	</select>
+	
+	<select id="insertContentsHistory" >
+		INSERT INTO tb_contentshistory(contents_name, contents_type, ver_num, company_seq, app_name, app_type, description_text, upload_org_file, upload_save_file, contents_url, use_gb, use_avail_dt, use_disable_dt, complet_gb, distr_gb, limit_gb, limit_dt, mem_down_gb, mem_down_cnt, mem_down_amt, mem_down_start_dt, mem_down_end_dt, coupon_gb, coupon_num, nonmem_down_gb, nonmem_down_cnt, nonmem_down_amt, nonmem_down_star_dt, nonmem_down_end_dt, reg_user_seq, reg_user_id, reg_user_gb, reg_dt, chg_user_seq, chg_user_id, chg_user_gb, chg_dt, contents_size, distribute_req_dt, chg_contents_dt, distribute_complet_dt)
+			SELECT 
+				contents_name, contents_type, ver_num, company_seq, app_name, app_type, description_text, upload_org_file, upload_save_file, contents_url, use_gb, use_avail_dt, use_disable_dt, complet_gb, distr_gb, limit_gb, limit_dt, mem_down_gb, mem_down_cnt, mem_down_amt, mem_down_start_dt, mem_down_end_dt, coupon_gb, coupon_num, nonmem_down_gb, nonmem_down_cnt, nonmem_down_amt, nonmem_down_star_dt, nonmem_down_end_dt, reg_user_seq, reg_user_id, reg_user_gb, reg_dt, chg_user_seq, chg_user_id, chg_user_gb, chg_dt, contents_size, distribute_req_dt, chg_contents_dt, distribute_complet_dt
+			FROM
+			    tb_contents
+			WHERE
+			    contents_seq = #{contents_seq}
+		;
+	</select>
+	
+	<select id="deleteContentsBySeq">
+		DELETE
+		FROM
+		    tb_contents
+		WHERE
+			contents_seq=#{contents_seq}
+		;
+	</select>
+	
+	<select id="selectContentsForHistory" parameterType="java.util.List" resultType="com.clbee.pbcms.vo.ContentVO">
+		SELECT contents_name as contentsName, ver_num as verNum, reg_user_id as regUserId, distribute_complet_dt as distributeCompletDt, contents_size as contentsSize, description_text as descriptionText, limit_gb as limitGb, use_gb as useGb, complet_gb as completGb
+		FROM tb_contents 
+			<foreach collection="list" item="item">
+			WHERE contents_name=#{item.contents_name}
+			</foreach>
+		UNION
+		SELECT contents_name as contentsName, ver_num as verNum, reg_user_id as regUserId, distribute_complet_dt as distributeCompletDt, contents_size as contentsSize, description_text as descriptionText, limit_gb as limitGb, use_gb as useGb, complet_gb as completGb
+		FROM tb_contentshistory
+			<foreach collection="list" item="item">
+			WHERE contents_name=#{item.contents_name}
+			</foreach>
+		ORDER BY verNum DESC;
+	</select>
+	<!-- 20180327 - lsy : develop version managemenet - end -->
+	
+	<!-- 20180607 : lsy - app make request -> contents select -->
+	<select id="getListContentsForAppMake" parameterType="hashmap" resultType="com.clbee.pbcms.vo.ContentVO">
+		SELECT 
+			contents_seq as contentsSeq, contents_name as contentsName, ver_num as verNum, contents_size as contentsSize, complet_gb as completGb, chg_dt as chgDt, reg_user_id as regUserId
+		FROM
+			tb_contents
+		WHERE 
+			contents_type = 1
+			AND use_gb = 1
+			AND limit_gb = 2
+		<choose>
+			<when test='beforeDate != null'>
+				AND chg_dt between #{beforeDate} and #{nowDate}
+			</when>
+		</choose>
+		<choose>
+			<when test='searchValue != null'>
+				AND contents_name like CONCAT('%', #{searchValue}, '%')
+			</when>
+		</choose>
+		ORDER BY contents_seq DESC; 
+	</select>
+
+	<select id="getListContentsCheckBox" parameterType="hashmap" resultType="hashmap">
+    	SELECT * FROM tb_contents
+	</select>
+	
+	<select id="selectRelatedAppinfo" parameterType="hashmap" resultType="com.clbee.pbcms.vo.ContentVO">
+    	SELECT 
+    		contents_seq as contentsSeq, app_name as appName, app_type as appType
+    	FROM 
+    		tb_contents
+    	WHERE
+    		contents_seq = 
+    		(
+    			SELECT
+    				contents_seq
+    			FROM
+    				tb_contentsapp_sub
+    			WHERE
+    				app_seq like CONCAT('%', #{relatedAppSeq}, '%')
+    		)
+		;
+	</select>
+	
+	<select id="selectRelatedAppSeqInfo" parameterType="java.lang.Integer" resultType="java.lang.String">
+		SELECT 
+			app_seq as appSeq
+		FROM
+			tb_contentsapp_sub
+		WHERE
+			contents_seq=#{contentSeq}
+		;
+	</select>
+
+	<select id="selectRelatedAppInfoNew" parameterType="java.lang.Integer" resultType="com.clbee.pbcms.vo.ContentVO">
+		SELECT 
+			app_name as appName, app_type as appType
+		FROM
+			tb_contents
+		WHERE
+			contents_seq=#{contentSeq}
+		;
+	</select>
+   
+	<update id="updateRelatedAppInfo" parameterType="hashmap">
+		UPDATE
+			tb_contents
+		SET
+			app_name = #{relatedAppName},
+			app_type = #{relatedAppType}
+		WHERE
+			contents_seq = #{contentSeq}
+		;
+	</update>
+   
+	<update id="updateRelatedAppSubInfo" parameterType="hashmap">
+		UPDATE
+			tb_contentsapp_sub
+		SET
+			app_seq = #{relatedAppSeq}
+		WHERE
+			contents_seq = #{contentSeq}
+		;
+	</update>
+	
+	<select id="inappContentsProcessGb" parameterType="hashmap" resultType="java.lang.Integer">
+		SELECT 
+			count(*)
+		FROM
+		    tb_contentsapp_sub
+		WHERE
+			app_seq like CONCAT('%', #{appSeq}, '%')
+			AND inapp_seq like CONCAT('%', #{inappSeq}, '%')
+		;
+	</select>
+	
+	<insert id="insertContentsFromInapp" parameterType="com.clbee.pbcms.vo.ContentVO">
+		INSERT INTO 
+			tb_contents 
+				(app_name, app_type, company_seq, complet_gb, contents_name, 
+				contents_size, contents_type, coupon_num, description_text, limit_gb, 
+				mem_down_amt, mem_down_cnt, nonmem_down_amt, reg_user_gb, reg_user_id, 
+				reg_user_seq, upload_org_file, upload_save_file, use_gb, ver_num,
+				reg_dt) 
+			values 
+				(#{appName}, #{appType}, #{companySeq}, #{completGb}, #{contentsName}, 
+				#{contentsSize}, #{contentsType}, #{couponNum}, #{descriptionText}, #{limitGb}, 
+				#{memDownAmt}, #{memDownCnt}, #{nonmemDownAmt}, #{regUserGb}, #{regUserId}, 
+				#{regUserSeq}, #{uploadOrgFile}, #{uploadSaveFile}, #{useGb}, #{verNum},
+				#{regDt})
+		;
+		<selectKey keyProperty="contentsSeq" resultType="java.lang.Integer" order="AFTER">
+			select MAX(contents_seq) FROM tb_contents;
+		</selectKey>
+	</insert>
+	
+	<insert id="insertContentsSubFromInapp" parameterType="com.clbee.pbcms.vo.ContentsappSubVO">
+		INSERT INTO 
+			tb_contentsapp_sub 
+				(contents_seq, app_seq, inapp_seq) 
+			values
+				(#{contentsSeq}, #{appSeq}, #{inappSeq})
+		;
+	</insert>
+	
+	<select id="selectRelatedContentsSeq" parameterType="hashmap" resultType="java.lang.Integer">		
+		SELECT 
+			contents_seq as contentsSeq
+		FROM
+			tb_contentsapp_sub
+		WHERE
+			app_seq like CONCAT('%', #{appSeq}, '%')
+			AND inapp_seq like CONCAT('%', #{inappSeq}, '%')
+		;
+	</select>
+	
+	<select id="selectBeforeContentInfo" parameterType="java.lang.Integer" resultType="com.clbee.pbcms.vo.ContentVO">		
+		SELECT 
+			app_name as appName, app_type as appType
+		FROM
+			tb_contents
+		WHERE
+			contents_seq = #{contents_seq}
+		;
+	</select>
+   
+	<update id="updateContentsFromInapp" parameterType="hashmap">
+		UPDATE
+			tb_contents
+		SET
+			contents_name=#{contentsName},
+			ver_num=#{verNum},
+			app_name=#{appName},
+			app_type=#{appType},
+			description_text=#{descriptionText},
+			upload_org_file=#{uploadOrgFile},
+			upload_save_file=#{uploadSaveFile},
+			chg_user_seq=#{chgUserSeq},
+			chg_user_id=#{chgUserId},
+			chg_user_gb=#{chgUserGb},
+			chg_dt=#{chgDt},
+			contents_size=#{contentsSize},
+			chg_contents_dt=#{chgContentsDt}
+		WHERE
+			contents_seq = #{contentsSeq}
+		;
+	</update>
+	
+	<select id="selectContentsFileName" parameterType="java.lang.Integer" resultType="java.lang.String">
+		SELECT 
+			upload_save_file as uploadSaveFile
+		FROM
+			tb_contents
+		WHERE
+			contents_seq=#{contentSeq}
+		;
+	</select>
+	
+	<delete id="deleteContentsSubBySeq" parameterType="java.lang.Integer">
+		DELETE FROM
+			tb_contentsapp_sub
+		WHERE
+			contents_seq=#{contentsSeq}
+		;
+	</delete>
+
+</mapper>

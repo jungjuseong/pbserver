@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="service.viewMenu.viewMenuMapper">
+
+	<select id="selectViewMenuInfo" parameterType="java.lang.Integer" resultType="com.clbee.pbcms.vo.GroupUserVO">
+		SELECT
+			menu_large as menuLarge, menu_medium as menuMedium, menu_function as menuFunction
+		FROM
+			tb_group_user
+		WHERE
+			group_seq=#{groupSeq}
+		;
+	</select>
+	
+	<select id="selectViewMenu" parameterType="hashmap" resultType="com.clbee.pbcms.vo.GroupMenuVO">
+		SELECT 
+			menu_name as menuName, page_url as pageUrl
+		FROM
+		    tb_group_menu
+		WHERE
+			menu_type=#{menuType}
+			and 
+			menu_seq in
+			<foreach collection="menuLarge" item="item" index="index" separator="," open="(" close=")">
+				#{item.value}
+			</foreach>
+		ORDER BY
+			menu_seq
+		;
+	</select>
+
+</mapper>

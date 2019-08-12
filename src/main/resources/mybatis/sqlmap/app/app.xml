@@ -1,0 +1,493 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="service.app.AppMapper">
+
+	<select id="selectAppVOByBundleIdAndOstype" parameterType="hashmap" resultType="java.util.LinkedHashMap">
+		SELECT
+		    a.app_seq as appSeq,
+		    a.reg_gb as regGb,
+		    a.app_name as appName,
+		    a.app_contents_amt as appContentsAmt,
+		    a.app_contents_gb as appContentsGb,
+		    a.file_name as fileName,
+		    a.ostype as ostype,
+		    a.ver_num as verNum,
+		    b.bundle_name as storeBundleId,
+		    a.provision_gb as provisionGb,
+		    a.description_text as descriptionText,
+		    a.icon_org_file as iconOrgFile,
+		    a.icon_save_file as iconSaveFile,
+		    a.template_name as templateName,
+		    a.template_seq as templateSeq,
+		    a.chg_text as chgText,
+		    a.use_gb as useGb,
+		    DATE_FORMAT(a.use_avail_dt, '%Y-%m-%d %k:%i:%s') as useAvailDt,
+		    DATE_FORMAT(a.use_disable_dt, '%Y-%m-%d %k:%i:%s') as useDisableDt,
+		    a.complet_gb as completGb,
+		    a.distr_gb as distrGb,
+		    a.limit_gb as limitGb,
+		    DATE_FORMAT(a.limit_dt, '%Y-%m-%d %k:%i:%s') as limitDt,
+		    a.mem_down_gb as memDownGb,
+		    a.mem_down_cnt as memDownCnt,
+		    a.mem_down_amt as memDownAmt,
+		    DATE_FORMAT(a.mem_down_start_dt, '%Y-%m-%d %k:%i:%s') as memDownStartDt,
+		    DATE_FORMAT(a.mem_down_end_dt, '%Y-%m-%d %k:%i:%s') as memDownEndDt,
+		    a.coupon_gb as couponGb,
+		    a.coupon_num as couponNum,
+		    a.nonmem_down_gb as nonmemDownGb,
+		    a.nonmem_down_cnt as nonmemDownCnt,
+		    a.nonmem_down_amt as nonmemDownAmt,
+		    DATE_FORMAT(a.nonmem_down_star_dt, '%Y-%m-%d %k:%i:%s') as nonmemDownStarDt,
+		    DATE_FORMAT(a.nonmem_down_end_dt, '%Y-%m-%d %k:%i:%s') as nonmemDownEndDt,
+		    a.install_gb as installGb,
+		    a.version_code as versionCode,
+		    a.reg_user_seq as regUserSeq,
+		    a.reg_user_id as regUserId,
+		    a.reg_user_gb as regUserGb,
+		    DATE_FORMAT(a.reg_dt, '%Y-%m-%d %k:%i:%s') as regDt,
+		    a.chg_user_seq as chgUserSeq,
+		    a.chg_user_id as chgUserId,
+		    a.chg_user_gb as chgUserGb,
+		    DATE_FORMAT(a.chg_dt, '%Y-%m-%d %k:%i:%s') as chgDt,
+		    a.app_size as appSize,
+		    a.app_resultCode as app_resultCode,
+		    a.use_user_gb as useUserGb,
+		    a.login_time as loginTime,
+		    a.logout_time as logoutTime,
+		    a.login_gb as loginGb
+		FROM
+		    tb_app AS a
+		        LEFT OUTER JOIN
+		    tb_bundle AS b ON a.app_seq = b.app_seq
+		WHERE
+		    b.bundle_name = #{store_bundle_id}
+		    <if test="ostype != 4">
+		        AND (b.os_type = '1' OR b.os_type = '2' OR b.os_type = '3') 
+		    </if>
+		    <if test="ostype == 4">
+		        AND b.os_type = '4'
+		    </if>
+		ORDER BY appSeq ASC
+		LIMIT 1;
+	</select>
+	
+	
+	<select id="selectIfAnyIdenticalCouponNumForAll" parameterType="hashmap" resultType="hashmap">
+		SELECT 
+	    	COUNT(*) AS IdenticalCouponCOUNT
+		FROM
+		    (SELECT 
+		        coupon_num
+		    FROM
+		        tb_app
+		    WHERE
+		        (coupon_num > ''
+		            AND coupon_num IS NOT NULL
+		            AND coupon_num = #{coupon_num}) UNION ALL SELECT 
+		        coupon_num
+		    FROM
+		        tb_contents
+		    WHERE
+		        (coupon_num > ''
+		            AND coupon_num IS NOT NULL
+		            AND coupon_num = #{coupon_num}) UNION ALL SELECT 
+		        coupon_num
+		    FROM
+		        tb_inapp
+		    WHERE
+		        (coupon_num > ''
+		            AND coupon_num IS NOT NULL
+		            AND coupon_num = #{coupon_num})) x;
+	</select>
+	
+	<select id="getRowIsCompletedByBundleId" parameterType="hashmap" resultType="java.util.LinkedHashMap">
+		SELECT 
+		    a.app_seq as appSeq,
+		    a.reg_gb as regGb,
+		    a.app_name as appName,
+		    a.app_contents_amt as appContentsAmt,
+		    a.app_contents_gb as appContentsGb,
+		    a.file_name as fileName,
+		    a.ostype as ostype,
+		    a.ver_num as verNum,
+		    b.bundle_name as storeBundleId,
+		    a.provision_gb as provisionGb,
+		    a.icon_org_file as iconOrgFile,
+		    a.description_text as descriptionText,
+		    a.icon_save_file as iconSaveFile,
+		    a.template_name as templateName,
+		    a.template_seq as templateSeq,
+		    a.chg_text as chgText,
+		    a.use_gb as useGb,
+		    DATE_FORMAT(a.use_avail_dt, '%Y-%m-%d %k:%i:%s') as useAvailDt,
+		    DATE_FORMAT(a.use_disable_dt, '%Y-%m-%d %k:%i:%s') as useDisableDt,
+		    a.complet_gb as completGb,
+		    a.distr_gb as distrGb,
+		    a.limit_gb as limitGb,
+		    DATE_FORMAT(a.limit_dt, '%Y-%m-%d %k:%i:%s') as limitDt,
+		    a.mem_down_gb as memDownGb,
+		    a.mem_down_cnt as memDownCnt,
+		    a.mem_down_amt as memDownAmt,
+		    DATE_FORMAT(a.mem_down_start_dt, '%Y-%m-%d %k:%i:%s') as memDownStartDt,
+		    DATE_FORMAT(a.mem_down_end_dt, '%Y-%m-%d %k:%i:%s') as memDownEndDt,
+		    a.coupon_gb as couponGb,
+		    a.coupon_num as couponNum,
+		    a.nonmem_down_gb as nonmemDownGb,
+		    a.nonmem_down_cnt as nonmemDownCnt,
+		    a.nonmem_down_amt as nonmemDownAmt,
+		    DATE_FORMAT(a.nonmem_down_star_dt, '%Y-%m-%d %k:%i:%s') as nonmemDownStarDt,
+		    DATE_FORMAT(a.nonmem_down_end_dt, '%Y-%m-%d %k:%i:%s') as nonmemDownEndDt,
+		    a.install_gb as installGb,
+		    a.version_code as versionCode,
+		    a.reg_user_seq as regUserSeq,
+		    a.reg_user_id as regUserId,
+		    a.reg_user_gb as regUserGb,
+		    DATE_FORMAT(a.reg_dt, '%Y-%m-%d %k:%i:%s') as regDt,
+		    a.chg_user_seq as chgUserSeq,
+		    a.chg_user_id as chgUserId,
+		    a.chg_user_gb as chgUserGb,
+		    DATE_FORMAT(a.chg_dt, '%Y-%m-%d %k:%i:%s') as chgDt,
+		    a.app_size as appSize,
+		    a.app_resultCode as app_resultCode,
+		    a.use_user_gb as useUserGb,
+		    a.app_schema as appSchema,
+		    a.app_host as appHost,
+		    DATE_FORMAT(a.distribute_req_dt, '%Y-%m-%d %k:%i:%s') as distributeReqDt,
+		    DATE_FORMAT(a.chg_contents_dt, '%Y-%m-%d %k:%i:%s') as chgContentsDt,
+		    DATE_FORMAT(a.distribute_complet_dt, '%Y-%m-%d %k:%i:%s') as distributeCompletDt,
+		    a.distribute_accept_id as distributeAcceptId,
+		    a.distribute_request_id as distributeRequestId
+		FROM
+		    tb_app AS a
+		        LEFT OUTER JOIN
+		    tb_bundle AS b ON a.app_seq = b.app_seq
+		WHERE
+		     b.bundle_name = #{store_bundle_id}
+		     AND a.complet_gb = '1'
+		     AND a.use_gb = '1'
+		     <if test="OSTYPE != 4">
+		     	AND (a.ostype = '1' OR a.ostype = '2' OR a.ostype = '3')
+		     </if>
+		     <if test="OSTYPE == 4">
+		     	AND a.ostype = '4'
+		     </if>
+		ORDER BY a.use_Gb DESC
+		LIMIT 1;
+	</select>
+
+	<!-- 20180327 - lsy : develop version managemenet -->
+	<select id="selectCompletGbBySeq" parameterType="java.lang.Integer" resultType="java.lang.String">
+		SELECT 
+			complet_gb
+		FROM
+		    tb_inapp
+		WHERE
+		    inapp_seq = #{inapp_seq}
+		;
+	</select>
+	
+	<select id="getSameInappSeq" parameterType="java.util.List" resultType="java.lang.String">
+		SELECT 
+			inapp_seq
+		FROM
+		    tb_inapp
+		WHERE
+			<foreach collection="list" item="item">
+			    inapp_name = #{item.inapp_name}
+			    AND
+			    store_bundle_id = #{item.store_bundle_id}
+			</foreach>
+		    AND
+		    complet_gb = '1'
+		;
+	</select>
+	
+	<select id="insertInappHistory" >
+		INSERT INTO tb_inapphistory(store_bundle_id,inapp_name,ver_num,category_seq,category_name,description_text,inapp_org_file,inapp_save_file,inapp_url,icon_org_file,icon_save_file,use_gb,use_avail_dt,use_disable_dt,complet_gb,distr_gb,limit_gb,limit_dt,mem_down_gb,mem_down_cnt,mem_down_amt,mem_down_start_dt,mem_down_end_dt,coupon_gb,coupon_num,nonmem_down_gb,nonmem_down_cnt,nonmem_down_amt,nonmem_down_star_dt,nonmem_down_end_dt,reg_user_seq,reg_user_id,reg_user_gb,reg_dt,chg_user_seq,chg_user_id,chg_user_gb,chg_dt,inapp_size,use_user_gb,screen_type, distribute_req_dt, chg_contents_dt, distribute_complet_dt)
+			SELECT 
+				store_bundle_id,inapp_name,ver_num,category_seq,category_name,description_text,inapp_org_file,inapp_save_file,inapp_url,icon_org_file,icon_save_file,use_gb,use_avail_dt,use_disable_dt,complet_gb,distr_gb,limit_gb,limit_dt,mem_down_gb,mem_down_cnt,mem_down_amt,mem_down_start_dt,mem_down_end_dt,coupon_gb,coupon_num,nonmem_down_gb,nonmem_down_cnt,nonmem_down_amt,nonmem_down_star_dt,nonmem_down_end_dt,reg_user_seq,reg_user_id,reg_user_gb,reg_dt,chg_user_seq,chg_user_id,chg_user_gb,chg_dt,inapp_size,use_user_gb,screen_type, distribute_req_dt, chg_contents_dt, distribute_complet_dt
+			FROM
+			    tb_inapp
+			WHERE
+			    inapp_seq = #{inapp_seq}
+		;
+	</select>
+	
+	<select id="deleteInAppBySeq">
+		DELETE
+		FROM
+		    tb_inapp
+		WHERE
+			inapp_seq=#{inapp_seq}
+		;
+	</select>
+	
+	<select id="selectAppForHistory" parameterType="java.util.List" resultType="com.clbee.pbcms.vo.AppVO">
+		SELECT
+			app_name as appName, ver_num as verNum, reg_user_id as regUserId, distribute_complet_dt as distributeCompletDt, app_size as appSize, description_text as descriptionText, limit_gb as limitGb, use_gb as useGb, complet_gb as completGb
+		FROM 
+			tb_app 
+			<foreach collection="list" item="item">
+			WHERE store_bundle_id=#{item.store_bundle_id}
+			</foreach>
+		UNION
+		SELECT 
+			app_name as appName, ver_num as verNum, reg_user_id as regUserId, distribute_complet_dt as distributeCompletDt, app_size as appSize, description_text as descriptionText, limit_gb as limitGb, use_gb as useGb, complet_gb as completGb
+		FROM 
+			tb_apphistory
+			<foreach collection="list" item="item">
+			WHERE store_bundle_id=#{item.store_bundle_id} 
+			</foreach>
+		ORDER BY verNum DESC
+		;
+	</select>
+	
+	<select id="selectInappForHistory" parameterType="java.util.List" resultType="com.clbee.pbcms.vo.InappVO">
+		SELECT 
+			inapp_name as inappName, ver_num as verNum, reg_user_id as regUserId, distribute_complet_dt as distributeCompletDt, inapp_size as inappSize, description_text as descriptionText, limit_gb as limitGb, use_gb as useGb, complet_gb as completGb, distribute_complet_dt as distributeCompletDt
+		FROM 
+			tb_inapp 
+			<foreach collection="list" item="item">
+			WHERE inapp_name=#{item.inapp_name} and store_bundle_id=#{item.store_bundle_id}
+			</foreach>
+		UNION
+		SELECT 
+			inapp_name as inappName, ver_num as verNum, reg_user_id as regUserId, distribute_complet_dt as distributeCompletDt, inapp_size as inappSize, description_text as descriptionText, limit_gb as limitGb, use_gb as useGb, complet_gb as completGb, distribute_complet_dt as distributeCompletDt
+		FROM 
+			tb_inapphistory
+			<foreach collection="list" item="item">
+			WHERE inapp_name=#{item.inapp_name} and store_bundle_id=#{item.store_bundle_id} 
+			</foreach>
+		ORDER BY verNum DESC
+		;
+	</select>
+	
+	<select id="selectAppBySeq" resultType="com.clbee.pbcms.vo.AppVO">
+		SELECT 
+			app_contents_amt as appContentsAmt, app_contents_gb as appContentsGb, app_name as appName, file_name as fileName, ver_num as verNum, version_code as versionCode, template_name as templateName, template_seq as templateSeq, description_text as descriptionText, chg_text as chgText, icon_org_file as iconOrgFile, icon_save_file as iconSaveFile, login_gb as loginGb, use_gb as useGb, use_user_gb as useUserGb, install_gb as installGb, distr_gb as distrGb, mem_down_gb as memDownGb, mem_down_amt as memDownAmt, mem_down_start_dt as memDownStartDt, mem_down_end_dt as memDownEndDt, coupon_gb as couponGb, nonmem_down_gb as nonmemDownGb, nonmem_down_amt as nonmemDownAmt, nonmem_down_star_dt as nonmemDownStarDt, nonmem_down_end_dt as nonmemDownEndDt, complet_gb as completGb, reg_gb as regGb 
+		FROM 
+			tb_app 
+		WHERE 
+			app_seq = #{app_seq}
+		;
+	</select>
+	
+	<select id="selectInappBySeq" resultType="com.clbee.pbcms.vo.InappVO">
+		SELECT 
+			inapp_name as inappName, ver_num as verNum, category_seq as categorySeq, category_name as categoryName, description_text as descriptionText, inapp_org_file as inappOrgFile, inapp_save_file as inappSaveFile, icon_org_file as iconOrgFile, icon_save_file as iconSaveFile, use_gb as useGb, use_user_gb as useUserGb, screen_type as screenType, complet_gb as completGb 
+		FROM 
+			tb_inapp 
+		WHERE 
+			inapp_seq = #{inapp_seq}
+		;
+	</select>
+	<!-- 20180327 - lsy : develop version managemenet - end -->
+	
+	<!-- 20180619 - lsy : when app request(Library), load inapp info -->
+	<select id="getInAppCntByBundleId" parameterType="java.lang.String" resultType="java.lang.Integer">
+		SELECT 
+			count(*)
+		FROM
+			tb_inapp
+		WHERE
+			store_bundle_id = #{store_bundle_id}
+		;
+	</select>
+	
+	<select id="getInAppByBundleId" parameterType="java.lang.String" resultType="com.clbee.pbcms.vo.InappVO">
+		SELECT
+			inapp_seq as inappSeq, inapp_name as inappName, ver_num as verNum, description_text as descriptionText, inapp_org_file as inappOrgFile,
+			inapp_save_file as inappSaveFile, reg_user_seq as regUserSeq, reg_user_id as regUserId, reg_user_gb as regUserGb, reg_dt as regDt,
+			chg_dt as chgDt, chg_contents_dt as chgContentsDt
+		FROM
+			tb_inapp
+		WHERE
+			store_bundle_id = #{store_bundle_id}
+		;
+	</select>
+	<!-- 20180619 - lsy : when app request(Library), load inapp info - end -->
+	
+	<select id="selectBeforAppInfoBySeqForNewVersion" parameterType="java.lang.Integer" resultType="com.clbee.pbcms.vo.AppVO">
+		SELECT
+			reg_gb as regGb, 
+			app_name as appName, 
+			app_contents_amt as appContentsAmt, 
+			app_contents_gb as appContentsGb,
+			file_name as fileName,
+			ostype as ostype,
+			store_bundle_id as storeBundleId,
+			provision_gb as provisionGb,
+			icon_org_file as iconOrgFile,
+			icon_save_file as iconSaveFile,			 
+			template_name as templateName, 
+			template_seq as templateSeq,
+			use_gb as useGb, 
+			version_code as versionCode,
+			chg_text as chgText
+		FROM
+			tb_app
+		WHERE
+			app_seq = #{app_seq}
+		;
+	</select>
+	
+	<insert id="insertNewVersionAppInfo" parameterType="com.clbee.pbcms.vo.AppVO">
+		INSERT INTO 
+			tb_app 
+				(reg_gb, app_name, app_contents_amt, app_contents_gb, file_name, 
+				ostype, ver_num, store_bundle_id, provision_gb, icon_org_file, icon_save_file,
+				template_name, template_seq, use_gb, use_avail_dt, complet_gb, 
+				limit_gb, reg_user_seq, reg_user_id, reg_user_gb, reg_dt,
+				chg_user_seq, chg_user_id, chg_user_gb, chg_dt, app_resultCode,
+				install_gb, version_code, use_user_gb, login_gb, chg_text) 
+			values 
+				(#{regGb}, #{appName}, #{appContentsAmt}, #{appContentsGb}, #{fileName}, 
+				#{ostype}, #{verNum}, #{storeBundleId}, #{provisionGb}, #{iconOrgFile}, #{iconSaveFile}, 
+				#{templateName}, #{templateSeq}, #{useGb}, #{useAvailDt}, #{completGb}, 
+				#{limitGb}, #{regUserSeq}, #{regUserId}, #{regUserGb}, #{regDt},
+				#{chgUserSeq}, #{chgUserId}, #{chgUserGb}, #{chgDt}, #{app_resultCode},
+				#{installGb}, #{versionCode}, #{useUserGb}, #{loginGb}, #{chgText})
+		;
+		<selectKey keyProperty="appSeq" resultType="java.lang.Integer" order="AFTER">
+			select MAX(app_seq) FROM tb_app;
+		</selectKey>
+	</insert>
+	
+	<select id="selectBeforeBundleInfoByAppSeqForNewVersion" parameterType="java.lang.Integer" resultType="com.clbee.pbcms.vo.BundleVO">
+		SELECT 
+			prov_seq as provSeq, 
+			bundle_name as bundleName, 
+			os_type as osType, 
+			prov_test_gb as provTestGb
+		FROM
+			tb_bundle
+		WHERE
+			bundle_seq IN (
+				SELECT 
+					bundle_seq
+				FROM 
+					tb_bundle 
+				WHERE 
+					app_seq=#{app_seq}
+			)
+		GROUP BY
+			prov_seq,
+			bundle_name,
+			os_type,
+			prov_test_gb
+		;
+	</select>
+	
+	<insert id="insertNewVersionAppBundleInfo" parameterType="com.clbee.pbcms.vo.BundleVO">
+		INSERT INTO 
+			tb_bundle 
+				(app_seq, prov_seq, bundle_name, os_type, prov_test_gb)
+			values 
+				(#{appSeq}, #{provSeq}, #{bundleName}, #{osType}, #{provTestGb})
+		;
+	</insert>
+	
+	<select id="selectAppByAppSeqForMakeJobTicket" parameterType="java.lang.Integer" resultType="com.clbee.pbcms.vo.AppVO">
+		SELECT
+			ver_num as verNum,
+			file_name as fileName,
+			store_bundle_id as storeBundleId,
+			ostype as ostype,
+			description_text as descriptionText, 
+			template_seq as templateSeq,
+			app_contents_amt as appContentsAmt,
+			reg_gb as regGb, 			
+			app_name as appName,
+			chg_text as chgText,
+			app_seq as appSeq,
+			provision_gb as provisionGb,
+			version_code as versionCode,
+			icon_org_file as iconOrgFile,
+			icon_save_file as iconSaveFile
+		FROM
+			tb_app
+		WHERE
+			app_seq = #{app_seq}
+		;
+	</select>
+	
+	<select id="selectBundleInfoByAppSeqForMakePbapp" parameterType="com.clbee.pbcms.vo.BundleVO" resultType="hashmap">
+		SELECT 
+			bundle.prov_seq as provSeq, 
+            bundle.prov_test_gb as provTestGb, 
+		    provision.distr_profile_name as distrProfileName
+		FROM
+			tb_bundle bundle,
+		    tb_provision provision
+		WHERE
+			bundle.prov_seq = provision.prov_seq
+		    AND	bundle.bundle_seq = (
+				SELECT 
+					bundle_seq
+				FROM 
+					tb_bundle 
+				WHERE 
+					app_seq=#{appSeq}
+					AND prov_seq=#{provSeq}
+				GROUP BY
+					bundle_seq
+			)
+		;
+	</select>
+	
+	<select id="duplicateVerCheck" parameterType="hashmap" resultType="java.lang.Integer">
+		SELECT
+			count(*)
+		FROM
+			tb_app
+		WHERE
+			store_bundle_id = #{store_bundle_id}
+			AND ostype = #{ostype}
+			AND ver_num = #{ver_num}
+		;
+	</select>
+	
+	<select id="selectProvisionInfoByAppSeqForMakePbapp" parameterType="java.lang.Integer" resultType="com.clbee.pbcms.vo.ProvisionVO">
+		SELECT 
+			bundle.prov_seq as provSeq, 
+		    provision.prov_name as provName
+		FROM
+			tb_bundle bundle,
+		    tb_provision provision
+		WHERE
+			bundle.prov_seq = provision.prov_seq
+		    AND	bundle.bundle_seq IN (
+				SELECT 
+					bundle_seq
+				FROM 
+					tb_bundle 
+				WHERE 
+					app_seq=#{app_seq}
+			)
+		GROUP BY
+			bundle.prov_seq,
+		    provision.prov_name
+		;
+	</select>
+	
+	<select id="selectAppVersionMax" parameterType="java.lang.Integer" resultType="java.lang.String">
+		SELECT 
+			max(app.ver_num)
+		FROM(
+			SELECT
+				ver_num
+			FROM 
+				tb_app 
+			WHERE 
+				store_bundle_id=(
+					SELECT
+						store_bundle_id
+					FROM
+						tb_app
+					WHERE
+						app_seq=#{app_seq}
+			    )
+		) app
+		;
+	</select>
+	
+</mapper>
